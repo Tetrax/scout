@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scout-mvp://schemas/source-v1",
+  "title": "Scout Source V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "required", "enabled", "role", "max_items_per_run", "url", "access_mode", "scope"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "name": {"type": "string", "minLength": 1},
+    "required": {"type": "boolean"},
+    "enabled": {"type": "boolean"},
+    "role": {"enum": ["PRIMARY", "CORROBORATING", "DISCOVERY"]},
+    "max_items_per_run": {"type": "integer", "minimum": 0},
+    "url": {"type": "string", "pattern": "^https://[^\\s]+$"},
+    "access_mode": {"const": "READ_ONLY"},
+    "scope": {"type": "string", "minLength": 1}
+  }
+}

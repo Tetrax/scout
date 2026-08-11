@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scout-mvp://schemas/run-v1",
+  "title": "Scout Run V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "invocation_id", "profile_id", "trigger", "status", "started_at", "finished_at", "source_ids", "observation_ids", "event_ids", "card_ids", "counts", "errors", "network_calls"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "invocation_id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "profile_id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "trigger": {"const": "MANUAL"},
+    "status": {"enum": ["RUNNING", "PARTIAL", "SUCCESS", "FAILED"]},
+    "started_at": {"type": "string", "minLength": 1},
+    "finished_at": {"type": "string", "minLength": 1},
+    "source_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "observation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "event_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "card_ids": {"type": "array", "maxItems": 3, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sources", "observations", "events", "cards", "errors"],
+      "properties": {
+        "sources": {"type": "integer", "minimum": 0},
+        "observations": {"type": "integer", "minimum": 0},
+        "events": {"type": "integer", "minimum": 0},
+        "cards": {"type": "integer", "minimum": 0, "maximum": 3},
+        "errors": {"type": "integer", "minimum": 0}
+      }
+    },
+    "errors": {"type": "array", "items": {"type": "string", "maxLength": 1000}},
+    "network_calls": {"type": "integer", "minimum": 0},
+    "model": {"const": "gpt-5.6-sol"},
+    "notes": {"type": "string", "maxLength": 2000}
+  }
+}
