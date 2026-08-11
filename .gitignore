@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+/config/scout.local.json
+
+# Scout personal runtime — canonical location is ~/.local/state/scout/
+/runtime/
+/data/
+/state/
+/.scout/
+/artifacts/
+/.staging/
+/runs.jsonl
+/transaction.jsonl
+/observations.jsonl
+/events.jsonl
+/factual-gates.jsonl
+/decisions.jsonl
+/cards.jsonl
+/feedback.jsonl
+/weekly-reviews.jsonl
+/checkpoints.json
+/source-state.json
+/profile.json
+
+# Private archives and temporary files
+*.bundle
+*.tmp
+*.swp
+*~
+.DS_Store
