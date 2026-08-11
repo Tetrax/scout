@@ -28,6 +28,22 @@ jobs:
       - name: Unit tests
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python -m unittest discover -s tests -v
+        run: |
+          set -euo pipefail
+          fixture="$HOME/.hermes/hermes-agent"
+          test ! -e "$fixture"
+          umask 077
+          mkdir -p "$fixture/venv/bin"
+          trap 'rm -rf "$fixture"' EXIT
+          printf '%s\n' \
+            'TOOLSETS = {"context_engine": {"tools": [], "includes": []}}' \
+            'def resolve_toolset(name):' \
+            '    if name != "context_engine":' \
+            '        raise KeyError(name)' \
+            '    return []' \
+            > "$fixture/toolsets.py"
+          printf '# offline CI fixture\n' > "$fixture/venv/bin/python"
+          printf '# offline CI fixture\n' > "$fixture/hermes"
+          python -m unittest discover -s tests -v
       - name: Compile Python sources
         run: python -m compileall -q scout_mvp scripts tests
