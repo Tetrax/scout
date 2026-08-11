@@ -1,0 +1,9 @@
+{
+  "state_root": "/home/example/.local/state/scout/runtime",
+  "profile_id": "example-profile",
+  "profile_context": [
+    "Example user evaluating local-first developer tooling",
+    "Prefers simple, robust, observable, reproducible and reversible workflows",
+    "Discovery never authorizes installation, configuration changes or roadmap work"
+  ]
+}

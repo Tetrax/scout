@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scout-mvp://schemas/profile-v1",
+  "title": "Scout Profile V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "priorities", "critical_scope"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "version": {"type": "string", "minLength": 1},
+    "priorities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "critical_scope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scout-mvp://schemas/factual-gate-v1",
+  "title": "Scout Factual Gate V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id", "provenance_status", "evidence_access", "freshness", "material_change", "critical_policy", "contradiction_status", "gate_action", "locked_facts", "source_urls"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "event_id": {"type": "string", "minLength": 1},
+    "provenance_status": {"enum": ["VALID", "INVALID", "UNKNOWN"]},
+    "evidence_access": {"enum": ["COLLECTED", "CITED_NOT_COLLECTED", "MIXED", "UNKNOWN"]},
+    "freshness": {"enum": ["CURRENT", "STALE", "UNKNOWN"]},
+    "material_change": {"enum": ["YES", "NO", "UNKNOWN"]},
+    "critical_policy": {"enum": ["MUST_SHOW", "NORMAL", "UNKNOWN"]},
+    "contradiction_status": {"enum": ["NONE", "OPEN", "RESOLVED", "UNKNOWN"]},
+    "gate_action": {"enum": ["MUST_SHOW", "ELIGIBLE", "HOLD", "REVIEW", "BLOCK"]},
+    "locked_facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "value", "observation_ids"],
+        "properties": {
+          "kind": {"type": "string", "minLength": 1},
+          "value": {},
+          "observation_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "source_urls": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^https://[^\\s]+$"}
+    },
+    "gate_reasons": {"type": "array", "items": {"type": "string"}},
+    "uncertainty_reasons": {"type": "array", "items": {"type": "string"}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"provenance_status": {"const": "INVALID"}}},
+      "then": {"properties": {"gate_action": {"const": "BLOCK"}}}
+    },
+    {
+      "if": {"properties": {"critical_policy": {"const": "MUST_SHOW"}}},
+      "then": {"properties": {"gate_action": {"const": "MUST_SHOW"}}}
+    }
+  ]
+}

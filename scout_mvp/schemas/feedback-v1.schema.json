@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scout-mvp://schemas/feedback-v1",
+  "title": "Scout Feedback V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "card_id", "profile_id", "label", "created_at"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "card_id": {"type": "string", "minLength": 1},
+    "profile_id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "label": {"enum": ["DISLIKE", "LOVE", "STAR"]},
+    "reason": {"type": "string", "maxLength": 1000},
+    "comment": {"type": "string", "maxLength": 2000},
+    "created_at": {"type": "string", "minLength": 1}
+  }
+}

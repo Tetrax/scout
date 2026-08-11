@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scout-mvp://schemas/weekly-review-v1",
+  "title": "Scout Weekly Review V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "profile_id", "week_start", "week_end", "created_at", "run_ids", "estimated_attention_minutes", "weekly_answer", "useful_card_ids", "found_alone_answers"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "profile_id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "week_start": {"type": "string", "minLength": 1},
+    "week_end": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "minLength": 1},
+    "question": {"type": "string", "minLength": 1},
+    "run_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "estimated_attention_minutes": {"type": "integer", "minimum": 0},
+    "weekly_answer": {"enum": ["YES", "PARTIALLY", "NO"]},
+    "useful_card_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "found_alone_answers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["card_id", "answer"],
+        "properties": {
+          "card_id": {"type": "string", "minLength": 1},
+          "answer": {"enum": ["PROBABLY_YES", "PROBABLY_NO", "UNSURE"]}
+        }
+      }
+    },
+    "concrete_outcomes": {"type": "array", "items": {"type": "string", "maxLength": 1000}},
+    "desire_to_keep": {"enum": ["YES", "NO", "UNSURE"]},
+    "notes": {"type": "string", "maxLength": 3000}
+  }
+}

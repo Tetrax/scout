@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scout-mvp://schemas/observation-v1",
+  "title": "Scout Observation V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "source_id", "external_id", "kind", "observed_at", "title", "text", "canonical_url", "provenance"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "source_id": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "external_id": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["NEWS", "RELEASE", "SECURITY", "PROJECT", "ACTIVITY", "OTHER"]},
+    "observed_at": {"type": "string", "minLength": 1},
+    "retrieved_at": {"type": "string", "minLength": 1},
+    "published_at": {"type": "string", "minLength": 1},
+    "title": {"type": "string"},
+    "text": {"type": "string"},
+    "canonical_url": {"type": "string", "pattern": "^https://[^\\s]+$"},
+    "source_url": {"type": "string", "pattern": "^https://[^\\s]+$"},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_url", "retrieved_at", "response_status", "content_sha256", "collector", "read_only"],
+      "properties": {
+        "source_url": {"type": "string", "pattern": "^https://[^\\s]+$"},
+        "retrieved_at": {"type": "string", "minLength": 1},
+        "response_status": {"type": "integer", "minimum": 200, "maximum": 599},
+        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "collector": {"type": "string", "minLength": 1},
+        "read_only": {"const": true}
+      }
+    },
+    "metadata": {"type": "object"}
+  }
+}
