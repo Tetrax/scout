@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Favoris · Scout{% endblock %}
+{% block content %}
+<section class="page-heading"><div class="eyebrow">Bibliothèque personnelle</div><h1>Tes favoris</h1><p>⭐ signifie intérêt fort et favori. Corriger la réaction met immédiatement cette vue à jour.</p></section>
+{% if items %}
+<div class="card-grid">
+  {% for item in items %}{% include "_card.html" %}{% endfor %}
+</div>
+{% else %}
+<div class="empty-state"><span aria-hidden="true">☆</span><h2>Aucun favori.</h2><p>Utilise ⭐ sur une carte pour la conserver ici.</p></div>
+{% endif %}
+{% endblock %}

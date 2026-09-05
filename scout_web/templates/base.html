@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>{% block title %}Scout{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='scout.css') }}">
+  <script src="{{ url_for('static', filename='scout.js') }}" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="{{ url_for('home') }}" aria-label="Scout, accueil">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span><strong>Scout</strong><small>Le signal, pas le bruit.</small></span>
+      </a>
+      <nav class="main-nav" aria-label="Navigation principale">
+        <a href="{{ url_for('home') }}"{% if request.endpoint == 'home' %} aria-current="page"{% endif %}>Découvrir</a>
+        <a href="{{ url_for('favorites') }}"{% if request.endpoint == 'favorites' %} aria-current="page"{% endif %}>Favoris</a>
+        <a href="{{ url_for('history') }}"{% if request.endpoint == 'history' %} aria-current="page"{% endif %}>Historique</a>
+        <a href="{{ url_for('preferences') }}"{% if request.endpoint in ['preferences', 'preferences_post'] %} aria-current="page"{% endif %}>Intérêts</a>
+      </nav>
+      <form action="{{ url_for('logout') }}" method="post" class="logout-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="button button-quiet" type="submit">Se déconnecter</button>
+      </form>
+    </header>
+    <main id="main-content">
+      {% if notice %}<div class="notice" role="status">{{ notice }}</div>{% endif %}
+      {% if error %}<div class="notice notice-error" role="alert">{{ error }}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+      <span>Scout personnel · lancement manuel</span>
+      <span>révision {{ revision }}</span>
+    </footer>
+  </div>
+</body>
+</html>

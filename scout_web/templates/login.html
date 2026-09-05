@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Connexion · Scout</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='scout.css') }}">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="brand login-brand">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span><strong>Scout</strong><small>Le signal, pas le bruit.</small></span>
+      </div>
+      <div class="eyebrow">Espace personnel</div>
+      <h1 id="login-title">Heureux de te revoir.</h1>
+      <p class="muted">Connecte-toi pour lancer une découverte volontaire et retrouver tes choix.</p>
+      {% if error %}<div class="notice notice-error" role="alert">{{ error }}</div>{% endif %}
+      <form action="{{ url_for('login_post') }}" method="post" class="stacked-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token or '' }}">
+        <label for="username">Utilisateur</label>
+        <input id="username" name="username" type="text" autocomplete="username" maxlength="80" required autofocus>
+        <label for="password">Mot de passe</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" maxlength="1024" required>
+        <button class="button button-primary button-wide" type="submit">Ouvrir Scout</button>
+      </form>
+      <p class="login-footnote">Accès privé · aucune indexation · révision {{ revision }}</p>
+    </section>
+  </main>
+</body>
+</html>

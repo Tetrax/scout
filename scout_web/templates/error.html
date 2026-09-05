@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Erreur {{ status }} · Scout{% endblock %}
+{% block content %}
+<div class="empty-state"><span aria-hidden="true">!</span><h1>Erreur {{ status }}</h1><p>{{ message }}</p><a class="button button-primary" href="{{ url_for('home') }}">Revenir à Scout</a></div>
+{% endblock %}

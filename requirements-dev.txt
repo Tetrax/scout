@@ -1,1 +1,2 @@
-jsonschema==4.10.3
+-r requirements.lock
+ruff==0.16.6

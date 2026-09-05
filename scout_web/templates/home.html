@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Découvrir · Scout{% endblock %}
+{% block content %}
+<section class="hero-panel">
+  <div>
+    <div class="eyebrow">Découverte volontaire</div>
+    <h1>Quelques signaux.<br><span>Seulement s’ils valent ton attention.</span></h1>
+    <p>Scout collecte quatre sources fixes et fiables, puis propose de zéro à trois cartes. Zéro est un bon résultat quand rien ne mérite d’interrompre ta journée.</p>
+  </div>
+  <form action="{{ url_for('discover') }}" method="post" data-discovery-form>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button class="button button-primary discovery-button" type="submit">
+      <span data-idle>Lancer une découverte</span>
+      <span data-loading hidden>Collecte en cours…</span>
+    </button>
+    <small>Manuel · borné · sans notification</small>
+  </form>
+</section>
+
+<section class="explain-strip" aria-label="Convention des réactions">
+  <strong>Ta convention</strong>
+  <span>👎 réduit les contenus similaires</span>
+  <span>❤️ indique un intérêt</span>
+  <span>⭐ renforce l’intérêt et ajoute aux favoris</span>
+  <span>Le silence reste neutre</span>
+</section>
+
+<div class="mode-banner">
+  <span class="status-dot" aria-hidden="true"></span>
+  <div><strong>Mode déterministe</strong><p>L’IA serveur n’est pas connectée à tes secrets Hermes. Les faits restent sourcés ; préférences, retours, déjà-vu, répétition et diversité déterminent le classement.</p></div>
+</div>
+
+{% if latest_run %}
+<section class="section-heading">
+  <div><div class="eyebrow">Dernière découverte</div><h2>{{ latest_run['items']|length }} proposition{{ 's' if latest_run['items']|length != 1 else '' }}</h2></div>
+  <span class="run-status status-{{ latest_run.status|lower }}">{{ latest_run.status }}</span>
+</section>
+{% if latest_run['items'] %}
+<div class="card-grid">
+  {% for item in latest_run['items'] %}{% include "_card.html" %}{% endfor %}
+</div>
+{% else %}
+<div class="empty-state"><span aria-hidden="true">✓</span><h2>Rien à signaler.</h2><p>Les sources ont été vérifiées, mais aucun contenu nouveau n’a franchi le seuil. Scout ne remplit jamais pour remplir.</p></div>
+{% endif %}
+<section class="sources-panel">
+  <div class="section-heading compact"><div><div class="eyebrow">Provenance</div><h2>État des sources</h2></div></div>
+  <div class="source-list">
+  {% for source_id, definition in source_definitions.items() %}
+    {% set status = latest_run.source_statuses.get(source_id, {}) %}
+    <div class="source-row"><span><strong>{{ definition.label }}</strong><small>{{ definition.url }}</small></span><span class="source-status source-{{ status.get('status', 'unknown')|lower }}">{{ status.get('status', 'INCONNU') }}</span></div>
+  {% endfor %}
+    <div class="source-row source-disabled"><span><strong>X Bookmarks</strong><small>{{ x_diagnostic }}</small></span><span class="source-status">DÉSACTIVÉE</span></div>
+  </div>
+</section>
+{% else %}
+<div class="empty-state first-run"><span aria-hidden="true">↗</span><h2>Prêt pour une première découverte.</h2><p>La collecte préparatoire peut alimenter le cache sans marquer les cartes vues. Le premier lancement reste entièrement volontaire.</p></div>
+{% endif %}
+{% endblock %}
