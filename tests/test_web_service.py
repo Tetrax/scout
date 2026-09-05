@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from scout_web.database import Database
@@ -98,6 +98,38 @@ class DiscoveryServiceTests(unittest.TestCase):
         self.assertEqual(
             {entry["status"] for entry in self.db.source_cache().values()},
             {"CACHED"},
+        )
+
+    def test_cached_source_failures_remain_explicit_until_retry_is_due(self) -> None:
+        source_ids = {
+            "fortinet_psirt",
+            "cisa_kev_fortinet",
+            "github_hermes_releases",
+            "github_openai_codex_releases",
+        }
+        first = run_discovery(
+            self.db,
+            now=NOW,
+            fetcher=FixtureFetcher(fail=source_ids),
+        )
+        recovery_fetcher = FixtureFetcher()
+
+        cached = run_discovery(
+            self.db,
+            now=NOW + timedelta(minutes=1),
+            fetcher=recovery_fetcher,
+        )
+
+        self.assertEqual(first["status"], "FAILED")
+        self.assertEqual(cached["status"], "FAILED")
+        self.assertEqual(recovery_fetcher.calls, [])
+        self.assertEqual(
+            {entry["status"] for entry in cached["source_statuses"].values()},
+            {"ERROR"},
+        )
+        self.assertEqual(
+            {entry["status"] for entry in self.db.source_cache().values()},
+            {"ERROR"},
         )
 
     def test_source_failure_and_empty_source_are_nonfatal_and_explicit(self) -> None:

@@ -137,6 +137,35 @@ class RankingTests(unittest.TestCase):
 
         self.assertEqual(len([entry for entry in ranked if entry.item["story_key"] == "cve:CVE-2026-12345"]), 1)
 
+    def test_story_seen_from_one_source_is_excluded_from_later_sources(self) -> None:
+        candidates = [
+            item(
+                "same-news-other-source",
+                source="fortinet_psirt",
+                published="2026-09-04T10:00:00Z",
+                topics=("fortinet",),
+                story_key="cve:CVE-2026-12345",
+            ),
+            item(
+                "new-news",
+                source="github_hermes_releases",
+                published="2026-09-04T10:00:00Z",
+                topics=("hermes",),
+            ),
+        ]
+
+        ranked = rank_candidates(
+            candidates,
+            INTERESTS,
+            {},
+            set(),
+            {},
+            NOW,
+            seen_story_keys={"cve:CVE-2026-12345"},
+        )
+
+        self.assertEqual([entry.item["id"] for entry in ranked], ["new-news"])
+
     def test_stale_content_is_not_presented_as_recent_and_missing_date_stays_eligible(self) -> None:
         candidates = [
             item(

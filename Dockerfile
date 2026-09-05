@@ -30,4 +30,4 @@ RUN python -m compileall -q scout_mvp scout_web scripts wsgi.py
 USER scout:scout
 EXPOSE 8080
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "4", "--timeout", "45", "--graceful-timeout", "15", "--keep-alive", "5", "--max-requests", "1000", "--max-requests-jitter", "100", "--limit-request-line", "4094", "--limit-request-fields", "50", "--limit-request-field_size", "4094", "--worker-tmp-dir", "/tmp", "--access-logfile", "-", "--error-logfile", "-", "wsgi:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "4", "--timeout", "45", "--graceful-timeout", "15", "--keep-alive", "5", "--max-requests", "1000", "--max-requests-jitter", "100", "--limit-request-line", "4094", "--limit-request-fields", "50", "--limit-request-field_size", "4094", "--worker-tmp-dir", "/tmp", "--no-control-socket", "--access-logfile", "-", "--error-logfile", "-", "wsgi:app"]

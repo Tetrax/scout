@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from werkzeug.security import generate_password_hash
 
@@ -157,6 +158,15 @@ class WebApplicationTests(unittest.TestCase):
         )
         self.assertEqual(limited.status_code, 429)
         self.assertIn("Retry-After", limited.headers)
+
+    def test_cookie_less_login_flood_keeps_anonymous_sessions_bounded(self) -> None:
+        with patch("scout_web.auth.MAX_ANONYMOUS_SESSIONS", 3):
+            client = self.app.test_client(use_cookies=False)
+            for _ in range(8):
+                self.assertEqual(client.get("/login").status_code, 200)
+
+        sessions = self.app.extensions["scout_sessions"]
+        self.assertEqual(sessions.counts()["anonymous"], 3)
 
     def test_csrf_is_required_on_every_authenticated_mutation(self) -> None:
         self.login()

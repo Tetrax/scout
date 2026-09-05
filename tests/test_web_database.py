@@ -134,6 +134,7 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(len(history[0]["items"]), 1)
         self.assertEqual(history[1]["items"], [])
         self.assertIn(candidate["id"], self.db.seen_item_ids())
+        self.assertEqual(self.db.seen_story_keys(), {"title:one"})
 
     def test_source_facts_are_immutable_after_first_display(self) -> None:
         original = collected("locked")

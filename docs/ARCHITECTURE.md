@@ -24,7 +24,7 @@ Scout réduit volontairement le volume : un lancement manuel produit de zéro à
 3. Les sources dues sont collectées en parallèle. Chaque worker ne connaît qu’une `SourceDefinition` issue du catalogue fermé.
 4. Le parseur valide la taille, le format, l’identité, le lien canonique, les dates et les champs textuels. Les pages et descriptions sont des données hostiles ; elles ne deviennent jamais des instructions.
 5. SQLite déduplique par `(source_id, external_id)`, URL et `story_key`.
-6. Le ranking exclut le déjà-vu, filtre les dates hors fenêtre, combine qualité de source, fraîcheur, intérêt explicite, effets des réactions et répétition récente.
+6. Le ranking exclut les items et actualités (`story_key`) déjà vus, filtre les dates hors fenêtre, combine qualité de source, fraîcheur, intérêt explicite, effets des réactions et répétition récente.
 7. La sélection préfère des sources distinctes et réserve, si possible, une place de sérendipité hors thèmes dominants.
 8. Le run et ses cartes sont écrits transactionnellement, puis consultables dans l’historique.
 
@@ -40,13 +40,13 @@ Un objet encore seulement en cache peut être rafraîchi. Dès sa première sél
 
 ### Authentification
 
-Le mot de passe n’est conservé que comme dérivé Werkzeug `scrypt`. Le token de session aléatoire n’est conservé qu’en SHA-256 ; le cookie est `Secure`, `HttpOnly`, `SameSite=Strict`. Les mutations exigent un jeton CSRF serveur. Une connexion réussie révoque la session anonyme et en crée une nouvelle. Les échecs sont limités par IP dérivée au HMAC.
+Le mot de passe n’est conservé que comme dérivé Werkzeug `scrypt`. Le token de session aléatoire n’est conservé qu’en SHA-256 ; le cookie est `Secure`, `HttpOnly`, `SameSite=Strict`. Les mutations exigent un jeton CSRF serveur. Une connexion réussie révoque la session anonyme et en crée une nouvelle. Les échecs sont limités par IP dérivée au HMAC. Les sessions anonymes expirées sont purgées à la création et leur nombre est plafonné à 1 024 afin qu’un client sans cookies ne puisse pas faire croître cette table sans borne.
 
 Nginx est le seul client direct du backend loopback. `ProxyFix(x_for=1, x_proto=1)` suppose exactement ce proxy de confiance. Les hôtes acceptés sont limités à `scout.valdev.me`, `localhost` et `127.0.0.1`.
 
 ### Secrets
 
-Le conteneur ne monte aucun fichier Hermes, OAuth, SSH ou GitHub. Seuls le nom d’utilisateur, le dérivé du mot de passe et la clé de session Scout lui sont fournis. Le mot de passe initial en clair n’existe que dans `/home/tetrax/.config/scout/access.txt`, lisible par `tetrax` uniquement.
+Le conteneur ne monte aucun fichier Hermes, OAuth, SSH ou GitHub. Seuls le nom d’utilisateur, le dérivé du mot de passe et la clé de session Scout lui sont fournis. Compose lit ces valeurs en mode `raw` pour préserver littéralement les séparateurs `$` du dérivé `scrypt`. Le mot de passe initial en clair n’existe que dans `/home/tetrax/.config/scout/access.txt`, lisible par `tetrax` uniquement.
 
 ### Modèle
 
@@ -60,7 +60,7 @@ La sauvegarde utilise l’API SQLite Online Backup et vérifie `PRAGMA integrity
 
 ## Contraintes opérationnelles
 
-- un worker Gunicorn et quatre threads : SQLite reste simple et l’accès est personnel ;
+- un worker Gunicorn et quatre threads, sans control socket inutile sur le rootfs en lecture seule : SQLite reste simple et l’accès est personnel ;
 - collecte réseau maximale théorique : quatre requêtes en parallèle, délai individuel de 12 s ;
 - cache réussi : 30 min ; retry d’une source en erreur : 5 min ;
 - taille maximale d’une requête applicative : 64 KiB ;

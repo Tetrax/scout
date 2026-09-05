@@ -12,6 +12,7 @@ ANONYMOUS_TTL = timedelta(minutes=20)
 AUTHENTICATED_TTL = timedelta(hours=12)
 LOGIN_WINDOW = timedelta(minutes=10)
 MAX_LOGIN_FAILURES = 5
+MAX_ANONYMOUS_SESSIONS = 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +57,26 @@ class SessionManager:
         expires_at = _text(now + (AUTHENTICATED_TTL if authenticated else ANONYMOUS_TTL))
         token_hash = _token_hash(token)
         with self.database.connect() as connection:
+            connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (created_at,))
+            if not authenticated:
+                anonymous_count = int(
+                    connection.execute(
+                        "SELECT COUNT(*) FROM sessions WHERE authenticated=0"
+                    ).fetchone()[0]
+                )
+                overflow = anonymous_count - MAX_ANONYMOUS_SESSIONS + 1
+                if overflow > 0:
+                    connection.execute(
+                        """
+                        DELETE FROM sessions WHERE token_hash IN (
+                            SELECT token_hash FROM sessions
+                            WHERE authenticated=0
+                            ORDER BY last_seen_at, created_at, token_hash
+                            LIMIT ?
+                        )
+                        """,
+                        (overflow,),
+                    )
             connection.execute(
                 """
                 INSERT INTO sessions(
@@ -169,6 +190,7 @@ class SessionManager:
 
 __all__ = [
     "AUTHENTICATED_TTL",
+    "MAX_ANONYMOUS_SESSIONS",
     "MAX_LOGIN_FAILURES",
     "ServerSession",
     "SessionManager",

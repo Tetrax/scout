@@ -379,6 +379,18 @@ class Database:
                 for row in connection.execute("SELECT DISTINCT item_id FROM run_items")
             }
 
+    def seen_story_keys(self) -> set[str]:
+        with self.connect() as connection:
+            return {
+                str(row[0])
+                for row in connection.execute(
+                    """
+                    SELECT DISTINCT items.story_key
+                    FROM run_items JOIN items ON items.id=run_items.item_id
+                    """
+                )
+            }
+
     def recent_source_counts(self, limit: int = 20) -> dict[str, int]:
         with self.connect() as connection:
             rows = connection.execute(

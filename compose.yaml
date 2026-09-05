@@ -15,7 +15,8 @@ services:
     ports:
       - "127.0.0.1:${SCOUT_PORT:-13739}:8080"
     env_file:
-      - ${SCOUT_ENV_FILE:-.env.example}
+      - path: ${SCOUT_ENV_FILE:-.env.example}
+        format: raw
     environment:
       SCOUT_DATABASE: /var/lib/scout/scout.sqlite3
       SCOUT_COOKIE_SECURE: "true"

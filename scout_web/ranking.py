@@ -126,6 +126,8 @@ def rank_candidates(
     seen_item_ids: set[str],
     recent_source_counts: Mapping[str, int],
     now: datetime,
+    *,
+    seen_story_keys: set[str] | None = None,
 ) -> list[RankedItem]:
     """Rank fact-locked candidates and return zero to three diverse cards.
 
@@ -136,9 +138,18 @@ def rank_candidates(
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("ranking time must be timezone-aware")
     scored: list[RankedItem] = []
+    previously_seen_stories = seen_story_keys or set()
     for candidate in candidates:
         identifier = candidate.get("id")
-        if not isinstance(identifier, str) or identifier in seen_item_ids:
+        story_key = candidate.get("story_key")
+        if (
+            not isinstance(identifier, str)
+            or identifier in seen_item_ids
+            or (
+                isinstance(story_key, str)
+                and story_key in previously_seen_stories
+            )
+        ):
             continue
         ranked = _score_one(
             candidate,

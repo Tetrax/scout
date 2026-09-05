@@ -53,6 +53,15 @@ def collect_and_store(
     for source_id in ENABLED_SOURCES:
         previous = cached.get(source_id)
         if not force and previous is not None and _parse(previous["next_refresh_at"]) > now_utc:
+            if previous["status"] == "ERROR":
+                statuses[source_id] = {
+                    "status": "ERROR",
+                    "item_count": int(previous["item_count"]),
+                    "detail": previous["error"]
+                    or "Source momentanément indisponible ou réponse refusée.",
+                    "last_success_at": previous["last_success_at"],
+                }
+                continue
             statuses[source_id] = {
                 "status": "CACHED",
                 "item_count": int(previous["item_count"]),
@@ -140,6 +149,7 @@ def run_discovery(
             database.seen_item_ids(),
             database.recent_source_counts(),
             now,
+            seen_story_keys=database.seen_story_keys(),
         )
         failed_sources = sum(
             1 for status in source_statuses.values() if status["status"] == "ERROR"

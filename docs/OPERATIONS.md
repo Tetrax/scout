@@ -31,6 +31,11 @@ La récupération ultérieure se fait par SSH avec le compte `tetrax`, en lisant
 
 ## 2. Variables de déploiement
 
+Scout exige Docker Compose 2.30 ou plus récent : `compose.yaml` utilise
+`env_file.format: raw` afin de transmettre les dérivés `scrypt` littéralement.
+Ne pas remplacer ce format par la forme courte, car les caractères `$` d'un
+dérivé seraient alors interprétés comme des variables Compose.
+
 Créer `/home/tetrax/.config/scout/deployment.env` en mode 600 :
 
 ```dotenv
