@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Intérêts · Scout{% endblock %}
+{% block content %}
+<section class="page-heading"><div class="eyebrow">Profil ouvert</div><h1>Centres d’intérêt</h1><p>Modifie le nom, le poids et les thèmes. Les réactions influencent le classement séparément : elles ne réécrivent jamais ce profil.</p></section>
+<form action="{{ url_for('preferences_post') }}" method="post" class="preferences-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="interest-list">
+  {% for interest in interests %}
+    <fieldset class="interest-card">
+      <legend>Intérêt {{ loop.index }}</legend>
+      <label for="name_{{ interest.id }}">Nom</label>
+      <input id="name_{{ interest.id }}" name="name_{{ interest.id }}" value="{{ interest.name }}" maxlength="80" required>
+      <div class="preference-row">
+        <label for="weight_{{ interest.id }}">Poids <span>0 à 5</span></label>
+        <input id="weight_{{ interest.id }}" name="weight_{{ interest.id }}" type="number" min="0" max="5" step="0.5" value="{{ interest.weight }}" required>
+      </div>
+      <label for="topics_{{ interest.id }}">Thèmes <span>séparés par des virgules</span></label>
+      <input id="topics_{{ interest.id }}" name="topics_{{ interest.id }}" value="{{ interest.topics|join(', ') }}" maxlength="500" required>
+      <div class="checkbox-row"><label><input type="checkbox" name="enabled_{{ interest.id }}" value="1"{% if interest.enabled %} checked{% endif %}> Actif</label><label class="delete-choice"><input type="checkbox" name="delete_{{ interest.id }}" value="1"> Supprimer</label></div>
+    </fieldset>
+  {% endfor %}
+  </div>
+  <fieldset class="interest-card interest-new">
+    <legend>Ajouter un intérêt</legend>
+    <label for="new_name">Nom</label><input id="new_name" name="new_name" maxlength="80" placeholder="Ex. Réalité virtuelle">
+    <div class="preference-row"><label for="new_weight">Poids <span>0 à 5</span></label><input id="new_weight" name="new_weight" type="number" min="0" max="5" step="0.5" value="3"></div>
+    <label for="new_topics">Thèmes</label><input id="new_topics" name="new_topics" maxlength="500" placeholder="vr, gaming, hardware">
+  </fieldset>
+  <div class="sticky-save"><p><strong>Convention :</strong> 👎 diminue, ❤️ augmente, ⭐ augmente fortement et favorise. Le silence est neutre.</p><button class="button button-primary" type="submit">Enregistrer les intérêts</button></div>
+</form>
+{% endblock %}

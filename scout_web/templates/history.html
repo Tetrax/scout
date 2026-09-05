@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Historique · Scout{% endblock %}
+{% block content %}
+<section class="page-heading"><div class="eyebrow">Trace consultable</div><h1>Historique</h1><p>Chaque lancement reste visible, y compris un résultat vide ou partiel. Les réactions peuvent être corrigées.</p></section>
+{% if runs %}
+<div class="history-list">
+{% for run in runs %}
+  <section class="history-run">
+    <header><div><h2>{{ run.completed_at }}</h2><p>{{ run['items']|length }} carte{{ 's' if run['items']|length != 1 else '' }} · {{ run.model_status }}</p></div><span class="run-status status-{{ run.status|lower }}">{{ run.status }}</span></header>
+    {% if run['items'] %}<div class="card-grid compact-grid">{% for item in run['items'] %}{% include "_card.html" %}{% endfor %}</div>{% else %}<p class="history-empty">Aucune carte retenue pour ce lancement.</p>{% endif %}
+  </section>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty-state"><span aria-hidden="true">◷</span><h2>Aucun lancement.</h2><p>Ton historique commencera avec ta première découverte volontaire.</p></div>
+{% endif %}
+{% endblock %}

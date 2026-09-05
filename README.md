@@ -1,85 +1,99 @@
 # Scout
 
-Scout is a local-first discovery engine that turns bounded, attributable observations into fact-locked decisions and at most three concise cards per manual run.
+Scout est une application personnelle de découverte volontaire : elle collecte des sources fixes et attribuables, puis propose de zéro à trois cartes. Zéro est un résultat valide ; la qualité et le coût d’attention priment sur le volume.
 
-## Current vertical slice
+La Web App 1.0 complète la tranche CLI historique sans la supprimer. Les modules `scout_mvp/` restent disponibles pour les contrats fact-lockés et le parcours expérimental Hermes ; la production `scout.valdev.me` utilise la couche compacte `scout_web/`, déterministe et sans secret Hermes dans le conteneur.
+
+## Parcours livré
+
+- authentification serveur et sessions révocables stockées par dérivé SHA-256 ;
+- lancement manuel d’une collecte bornée ;
+- zéro à trois cartes réelles, sans remplissage artificiel ;
+- résumé fidèle à la source, URL canonique et date uniquement quand la source la fournit ;
+- raison de classement explicitement qualifiée d’« appréciation personnalisée (déduction) » ;
+- réactions corrigibles : 👎 réduit les thèmes proches, ❤️ les renforce, ⭐ les renforce davantage et crée un favori ;
+- historique, favoris et centres d’intérêt modifiables ;
+- pénalité déjà-vu, pénalité de répétition, diversification des sources et place de sérendipité quand un candidat de qualité existe.
+
+## Sources
+
+| Source | Canal fixe | Limite par collecte |
+|---|---|---:|
+| Fortinet PSIRT | RSS FortiGuard officiel | 8 |
+| CISA KEV · Fortinet | catalogue JSON officiel, filtré Fortinet | 8 |
+| Hermes Agent | GitHub Releases officiel | 5 |
+| OpenAI Codex | GitHub Releases officiel | 5 |
+
+X Bookmarks reste désactivée et diagnostiquée (`unauthorized_client` observé le 2026-08-29). Scout ne modifie aucun accusé de lecture ou checkpoint X. OpenAI Codex est le remplacement public, gratuit et borné retenu.
+
+Chaque destination réseau est codée en dur et vérifiée. Les redirections sont refusées, les réponses et délais sont bornés, les formats sont validés strictement et aucun URL fourni par l’utilisateur n’est récupéré.
+
+## Architecture production
 
 ```text
-Official NousResearch/hermes-agent releases
-→ Observation
-→ Event
-→ authoritative Factual Gate
-→ gpt-5.6-sol attention triage without tools
-→ Decision
-→ deterministic ranking
-→ 0..3 local Cards
+Navigateur
+  → Nginx :443 (TLS, noindex, en-têtes de sécurité)
+  → 127.0.0.1:13739
+  → Gunicorn / Flask non-root, root filesystem en lecture seule
+  → SQLite WAL sur un unique bind mount persistant
+       ↘ quatre sources HTTPS fixes, uniquement lors d’un lancement manuel
 ```
 
-Zero Cards is a valid result. The model cannot rewrite locked facts, downgrade `MUST_SHOW`, add sources, or browse. Scout does not deliver to Discord in the current public slice.
+Le conteneur ne reçoit ni installation, ni OAuth, ni configuration Hermes. `MODEL_STATUS=DETERMINISTIC_DEGRADED` est volontaire et visible : le ranking utile fonctionne sans prétendre qu’un modèle serveur apprend. Voir [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## Repository boundary
+## Développement
 
-This repository contains only code, tests, JSON Schemas, sanitized documentation, CI, and neutral configuration examples.
-
-Personal runtime data belongs outside Git under:
-
-```text
-~/.local/state/scout/
-```
-
-This includes the real Profile, observations, Events, Cards, feedback, weekly reviews, checkpoints, source state, run history, staging, caches, and any private source data.
-
-Raw Gate 1 artifacts are intentionally excluded. Only the sanitized aggregate summary is retained in [`docs/GATE1_SUMMARY.md`](docs/GATE1_SUMMARY.md).
-
-## Requirements
-
-- Python 3.11 or 3.12
-- `jsonschema==4.10.3`
-- a canonical local Hermes Agent installation for real Sol triage
+Python 3.11 et 3.12 sont supportés.
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m pip install --requirement requirements-dev.txt
+umask 077
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m unittest discover -s tests -v
+.venv/bin/ruff check scout_web scripts/prefetch.py tests/test_web_*.py wsgi.py
+python3 -m compileall -q scout_mvp scout_web scripts tests wsgi.py
+SCOUT_ENV_FILE=.env.example docker compose --env-file .env.example config --quiet
 ```
 
-## Configuration
-
-Copy [`config/scout.example.json`](config/scout.example.json) outside the checkout and replace only the neutral example values:
+Construire l’image :
 
 ```bash
-install -d -m 700 "$HOME/.local/state/scout/runtime"
-install -m 600 config/scout.example.json "$HOME/.local/state/scout/config.json"
+docker build --build-arg SCOUT_REVISION="$(git rev-parse HEAD)" -t "scout:$(git rev-parse HEAD)" .
 ```
 
-The runtime config contains:
+`requirements.txt` expose les dépendances directes ; `requirements.lock` fige l’environnement de production ; `requirements-dev.txt` ajoute uniquement les outils de développement.
 
-- an absolute `state_root` outside Git;
-- a configurable `profile_id`;
-- the private `profile_context` supplied to the attention-only model prompt.
+## Exploitation
 
-## Manual run
+Le déploiement utilise `compose.yaml`, un tag d’image immuable, un port loopback et des secrets créés une seule fois hors Git. Le runbook détaillé couvre bootstrap, déploiement, healthcheck, collecte préparatoire, sauvegarde, restauration et rollback : [`docs/OPERATIONS.md`](docs/OPERATIONS.md).
 
-A real run performs one bounded GET against the official Hermes releases endpoint. Sol is called only when the Factual Gate produces candidates requiring triage.
-
-```bash
-python3 scripts/run_step2.py --config "$HOME/.local/state/scout/config.json"
-```
-
-No scheduler, daemon, database, Web App, automatic delivery, feedback mutation, model cascade, or additional source is included.
-
-## Tests
-
-```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
-python3 -m compileall -q scout_mvp scripts tests
-```
-
-## Git workflow
-
-After the one-time empty-repository bootstrap:
+Chemins de production retenus :
 
 ```text
-branch → tests → independent review → push branch → PR → CI → validation → merge
+/home/tetrax/.config/scout/scout.env       # dérivés et clé serveur, mode 600
+/home/tetrax/.config/scout/access.txt      # récupération initiale, mode 600
+/home/tetrax/.config/scout/deployment.env  # image/révision/port/chemins, mode 600
+/home/tetrax/.local/state/scout/web/       # SQLite et sauvegardes, mode 700
 ```
 
-No force-push or publication of the private R&D archive is required.
+Ne jamais committer ou afficher le contenu de ces fichiers. La commande de bootstrap n’imprime que leurs chemins :
+
+```bash
+umask 077
+sudo -u tetrax env PYTHONPATH="$PWD" "$PWD/.venv/bin/python" -m scout_web.credentials \
+  --directory /home/tetrax/.config/scout \
+  --url https://scout.valdev.me \
+  --username valentin
+```
+
+## Documentation
+
+- [`docs/MVP_V1.md`](docs/MVP_V1.md) : intention et contraintes initiales ;
+- [`docs/GATE1_SUMMARY.md`](docs/GATE1_SUMMARY.md) : synthèse publique du Gate 1 historique ;
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) : architecture et frontières de confiance ;
+- [`docs/OPERATIONS.md`](docs/OPERATIONS.md) : runbook production et rollback ;
+- [`docs/TRACEABILITY.md`](docs/TRACEABILITY.md) : idée initiale → source documentaire → réalisation → preuve.
+
+## Frontière du dépôt
+
+Le dépôt ne contient que code, tests, schémas, documentation, CI et exemples neutres. Données personnelles, sessions, réactions, favoris, secrets, caches et sauvegardes restent hors Git. Aucun crawler permanent, cron, notification, envoi tiers ou contenu de démonstration n’est activé.

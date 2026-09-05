@@ -1,0 +1,50 @@
+name: scout
+
+services:
+  web:
+    image: ${SCOUT_IMAGE:-scout:local}
+    build:
+      context: .
+      args:
+        APP_UID: ${SCOUT_UID:-1000}
+        APP_GID: ${SCOUT_GID:-1000}
+        SCOUT_REVISION: ${SCOUT_REVISION:-development}
+    container_name: scout-web
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${SCOUT_PORT:-13739}:8080"
+    env_file:
+      - ${SCOUT_ENV_FILE:-.env.example}
+    environment:
+      SCOUT_DATABASE: /var/lib/scout/scout.sqlite3
+      SCOUT_COOKIE_SECURE: "true"
+      SCOUT_TRUST_PROXY: "true"
+      SCOUT_TRUSTED_HOSTS: scout.valdev.me,localhost,127.0.0.1
+      SCOUT_REVISION: ${SCOUT_REVISION:-development}
+    volumes:
+      - type: bind
+        source: ${SCOUT_DATA_DIR:-./runtime}
+        target: /var/lib/scout
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    stop_grace_period: 20s
+    healthcheck:
+      test: ["CMD", "python", "-m", "scout_web.healthcheck"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

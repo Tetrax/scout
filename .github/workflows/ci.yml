@@ -46,4 +46,29 @@ jobs:
           printf '# offline CI fixture\n' > "$fixture/hermes"
           python -m unittest discover -s tests -v
       - name: Compile Python sources
-        run: python -m compileall -q scout_mvp scripts tests
+        run: python -m compileall -q scout_mvp scout_web scripts tests wsgi.py
+      - name: Lint the Web application delivery
+        run: >-
+          python -m ruff check
+          scout_web
+          scripts/prefetch.py
+          tests/test_web_*.py
+          wsgi.py
+
+  image:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build immutable Scout image
+        run: >-
+          docker build
+          --build-arg SCOUT_REVISION="$GITHUB_SHA"
+          --tag "scout-ci:$GITHUB_SHA"
+          .
+      - name: Verify image identity and non-root runtime
+        run: |
+          set -euo pipefail
+          test "$(docker image inspect "scout-ci:$GITHUB_SHA" --format '{{.Config.User}}')" = "scout:scout"
+          test "$(docker image inspect "scout-ci:$GITHUB_SHA" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$GITHUB_SHA"
+          docker run --rm --entrypoint python "scout-ci:$GITHUB_SHA" -c 'import scout_web; from scout_web.app import create_app; assert scout_web.__version__ == "1.0.0"; assert callable(create_app)'

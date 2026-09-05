@@ -1,0 +1,39 @@
+<article class="discovery-card" data-item-id="{{ item.id }}">
+  <div class="card-topline">
+    <span class="source-pill">{{ source_definitions[item.source_id].label }}</span>
+    {% if item.is_serendipity %}<span class="serendipity-pill">Sérendipité</span>{% endif %}
+    <span class="card-date">{{ item.published_at if item.published_at else 'Date non fournie' }}</span>
+  </div>
+  <h2><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></h2>
+  <div class="card-section">
+    <h3>Résumé de la source</h3>
+    <p>{{ item.summary }}</p>
+  </div>
+  {% if item.reason %}
+  <div class="card-section reason">
+    <h3>Pourquoi pour toi ?</h3>
+    <p>{{ item.reason }}</p>
+  </div>
+  {% endif %}
+  <div class="card-footer">
+    <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Lire la source <span aria-hidden="true">↗</span></a>
+    <div class="reaction-group" role="group" aria-label="Ta réaction à {{ item.title }}">
+      {% for value, icon, label in [('DISLIKE', '👎', 'Réduire les contenus similaires'), ('LOVE', '❤️', 'Marquer mon intérêt'), ('STAR', '⭐', 'Intérêt fort et favori')] %}
+      <form action="{{ url_for('reaction', item_id=item.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="reaction" value="{{ value }}">
+        <input type="hidden" name="return_to" value="{{ return_to }}">
+        <button type="submit" class="reaction-button{% if item.reaction == value %} active{% endif %}" aria-label="{{ label }}" aria-pressed="{{ 'true' if item.reaction == value else 'false' }}">{{ icon }}</button>
+      </form>
+      {% endfor %}
+      {% if item.reaction %}
+      <form action="{{ url_for('reaction', item_id=item.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="reaction" value="">
+        <input type="hidden" name="return_to" value="{{ return_to }}">
+        <button type="submit" class="reaction-button neutral" aria-label="Revenir au silence neutre">×</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</article>
