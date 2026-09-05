@@ -33,7 +33,7 @@ Chaque destination réseau est codée en dur et vérifiée. Les redirections son
 ```text
 Navigateur
   → Nginx :443 (TLS, noindex, en-têtes de sécurité)
-  → 127.0.0.1:13739
+  → 127.0.0.1:13741 (port du déploiement VPS)
   → Gunicorn / Flask non-root, root filesystem en lecture seule
   → SQLite WAL sur un unique bind mount persistant
        ↘ quatre sources HTTPS fixes, uniquement lors d’un lancement manuel

@@ -41,7 +41,7 @@ Créer `/home/tetrax/.config/scout/deployment.env` en mode 600 :
 ```dotenv
 SCOUT_IMAGE=scout:<SHA_MAIN>
 SCOUT_REVISION=<SHA_MAIN>
-SCOUT_PORT=13739
+SCOUT_PORT=13741
 SCOUT_UID=1000
 SCOUT_GID=1000
 SCOUT_DATA_DIR=/home/tetrax/.local/state/scout/web
@@ -85,7 +85,7 @@ Gate obligatoire :
 ```bash
 docker inspect scout-web \
   --format 'image={{.Config.Image}} id={{.Image}} state={{.State.Status}} health={{.State.Health.Status}} restarts={{.RestartCount}}'
-curl --fail --silent --show-error http://127.0.0.1:13739/healthz
+curl --fail --silent --show-error http://127.0.0.1:13741/healthz
 ```
 
 Exiger `running`, `healthy`, `restarts=0` et la révision attendue avant de modifier Nginx.
@@ -99,10 +99,10 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Pour le premier certificat, utiliser le plugin Nginx de Certbot après mise en place du vhost HTTP exact :
+Pour le premier certificat, installer uniquement le bloc HTTP exact avant le bloc TLS. Utiliser le webroot existant ; cela évite de réécrire d'autres vhosts :
 
 ```bash
-sudo certbot --nginx -d scout.valdev.me
+sudo certbot certonly --webroot -w /var/www/html -d scout.valdev.me
 ```
 
 Puis vérifier :
@@ -114,6 +114,8 @@ openssl s_client -connect scout.valdev.me:443 -servername scout.valdev.me </dev/
 ```
 
 Le HTTP doit rediriger vers HTTPS ; le certificat doit porter `scout.valdev.me` ; `robots.txt` doit refuser tout crawl ; les réponses doivent porter `X-Robots-Tag: noindex, nofollow, noarchive`.
+
+Sur le VPS partagé, le port `13739` appartient à la QA FortiFlow2 : Scout utilise explicitement `13741` dans `deployment.env` et Nginx. Recontrôler les allocations avant toute modification. Prendre `/home/tetrax/workspace/.locks/valdev-infra.lock` brièvement pour les mutations partagées, relire la configuration après acquisition, sauvegarder la cible, valider puis recharger Nginx. Ne pas conserver ce verrou pendant les builds ou l'émission webroot du certificat. Le modèle Nginx est compatible avec la version 1.24 du VPS (pas de directive `http2 on`).
 
 ## 6. Collecte préparatoire
 
