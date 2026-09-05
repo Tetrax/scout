@@ -80,7 +80,7 @@ jobs:
           deployment_env="$RUNNER_TEMP/scout-deployment.env"
           mkdir -p "$state_dir"
           sudo chown 1000:1000 "$state_dir"
-          chmod 700 "$state_dir"
+          sudo chmod 700 "$state_dir"
           printf '%s\n' \
             'SCOUT_USERNAME=ci' \
             'SCOUT_PASSWORD_HASH=scrypt:32768:8:1$ci$literal' \
